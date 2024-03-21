@@ -1,0 +1,206 @@
+<nav class="navbar navbar-expand-lg bg-body-tertiary">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="{% url 'default' %}">Fab Blocks Web</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Proyectos
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#" onclick="saveDataAndRedirect('{% url 'project_list' %}')">Nuevo Proyecto</a></li>
+            <li><a class="dropdown-item" href="#" onclick="saveDataAndRedirect('{% url 'project_list' %}')">Abrir Proyecto</a></li>
+            <li><a class="dropdown-item" href="{% url 'examples_list' %}">Ejemplos</a></li>
+            <li><a class="dropdown-item" onclick="saveData()">Guardar Proyecto</a></li>
+            <li><a class="dropdown-item" href="#">Importar Proyecto</a></li>
+            <li><a class="dropdown-item" onclick="downloadProject()">Exportar Proyecto</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#">Preferencias</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'logout' %}">Cerrar Sesión</a></li>
+          </ul>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Programa
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#">Verificar</a></li>
+            <li><a class="dropdown-item" href="#">Subir</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" onclick="toggleCode()">Mostrar Codigo</a></li>
+            <li><a class="dropdown-item" onclick="toggleCode()">Ocultar Codigo</a></li>
+          </ul>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Herramientas
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item disabled" href="#" data-bs-toggle="modal" data-bs-target="#placasModal">Placa</a></li>
+            <li><a class="dropdown-item disabled" href="#" data-bs-toggle="modal" data-bs-target="#codigoModal">Codigo</a></li>
+          </ul>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Ayuda
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#">Primeros Pasos</a></li>
+            <li><a class="dropdown-item" href="#">Tutoriales</a></li>
+            <li><a class="dropdown-item" href="#">FAQ</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" target="_blank" href="https://wa.me/+51984425782">Contactenos</a></li>
+            <li><a class="dropdown-item" target="_blank" href="https://github.com/codigorobotico/Fab-Blocks-IDE/issues/">Foro</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#aboutModal" href="#">Acerca de</a></li>
+          </ul>
+        </li>
+      </ul>
+      <div class="d-flex align-items-center ms-auto">
+        <div class="container m-2">
+          <span class="me-3">Proyecto:</span>
+          <span class="project-name">{{ project }}</span>
+        </div>
+        <img src="{{ user.image.url }}" alt="Foto de perfil" class="rounded-circle ms-auto" width="30" height="30">
+        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+          {{ user.username }}
+        </button>
+        <input type="hidden" id="user-id" value="{{ user.id }}">
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton">
+          <li><a class="dropdown-item" href="{% url 'profile' %}">Perfil</a></li>
+          <li><a class="dropdown-item" href="{% url 'project_task_list' %}">Entregar Tareas</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li>
+            <form action="{% url 'logout' %}" method="post">
+              {% csrf_token %}
+              <button type="submit" class="dropdown-item">Cerrar Sesión</button>
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Modales -->
+<div class="modal fade" id="placasModal" tabindex="-1" aria-labelledby="placasModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="placasModalLabel">Seleccionar Placa</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <ul class="list-group">
+          <li class="list-group-item"><a href="#">Arduino Uno</a></li>
+          <li class="list-group-item"><a href="#">Arduino Nano</a></li>
+          <li class="list-group-item"><a href="#">Arduino Mega</a></li>
+          <li class="list-group-item"><a href="#">Modular</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="codigoModal" tabindex="-1" aria-labelledby="codigoModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="codigoModalLabel">Seleccionar Codigo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <ul class="list-group">
+          <li class="list-group-item"><a href="#">Codigo 1</a></li>
+          <li class="list-group-item"><a href="#">Codigo 2</a></li>
+          <li class="list-group-item"><a href="#">Codigo 3</a></li>
+          <li class="list-group-item"><a href="#">Codigo 4</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="aboutModal" tabindex="-1" aria-labelledby="aboutModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="aboutModalLabel">Acerca de Fab Blocks Web</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Contenido del modal -->
+        <div style="font-size: 14px; text-align: center;">
+          {% load static %}
+          <img src="{% static '/media/codigo.ico' %}" width="64" height="64"><br>
+          <b>Fab Blocks Web</b><br><br>
+          Versión: 0.3<br>
+          Fecha de lanzamiento: Por definir<br>
+          Desarrollado por: Codigo SAC<br><br>
+          En Fab Blocks se pueden configurar módulos, que son dispositivos que permiten la programación de Arduino con actuadores y sensores mediante Modular, nuestra propia interfaz de programación<br><br>
+          Sitio web: <a href="https://fablab.pe/cursos">https://fablab.pe/cursos</a><br><br>
+          Soporte: <a href="mailto:coaquiraleonardo19@gmail.com">coaquiraleonardo19@gmail.com</a><br>
+          Programador: <a href="https://www.linkedin.com/in/leonardo-coaquira-b3490a25a/">Leonardo Coaquira</a><br>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para crear un nuevo proyecto -->
+<div class="modal fade" id="crearProyectoModal" tabindex="-1" aria-labelledby="crearProyectoModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="crearProyectoModalLabel">Crear Nuevo Proyecto</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Formulario para crear un nuevo proyecto -->
+        <form id="crearProyectoForm" method="POST" action="{% url 'create_project' %}">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="nombreProyecto" class="form-label">Nombre del Proyecto</label>
+            <input type="text" class="form-control" id="nombreProyecto" name="nombre_proyecto" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Crear Proyecto</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Script al final del documento -->
+<script>
+  // Show/hide code
+  function toggleCode() {
+      $('#code').toggle(); // Toggle the visibility of the code
+      var button = document.getElementById("toogleButton");
+      
+      if ($('#code').css('display') == 'none') {
+          $('#blockly').width('100%');   
+      } else {
+          $('#blockly').width('66%');
+      }
+      
+      // Resize workspace
+      Blockly.fireUiEvent(window, "resize");
+  }
+  function saveDataAndRedirect(url) {
+    try {
+        saveData(false);
+    } catch (error) {
+        console.error('Error al guardar los datos:', error);
+    } finally {
+        window.location.href = url;
+    }
+}
+</script>

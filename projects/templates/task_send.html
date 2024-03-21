@@ -1,0 +1,85 @@
+{% include 'header_account.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>Lista de Tareas</h1>
+    <hr>
+    <!-- Formulario para seleccionar proyecto y tareas -->
+    <form id="taskForm" method="POST">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="projectSelect">Seleccionar Proyecto:</label>
+            <select class="form-control" id="projectSelect" name="project">
+                {% for project in projects %}
+                <option value="{{ project.id }}">{{ project.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="taskSelect">Seleccionar Tarea:</label>
+            <select class="form-control" id="taskSelect" name="task">
+                <option value="" selected disabled>Seleccionar una tarea</option>
+                {% for task in tasks %}
+                <option value="{{ task.id }}" data-description="{{ task.description }}">{{ task.title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <!-- Contenedor para la descripción de la tarea -->
+        <div id="taskDescriptionContainer" class="mt-3">
+            <h4>Descripción de la Tarea:</h4>
+            <p id="taskDescription"></p>
+        </div>
+        <button type="button" id="submitTaskButton" class="btn btn-primary">Enviar Tarea</button>
+    </form>
+
+
+</div>
+
+<script>
+    document.getElementById('submitTaskButton').addEventListener('click', function () {
+        // Obtener los datos del formulario
+        const formData = new FormData(document.getElementById('taskForm'));
+
+        // Realizar la petición POST al servidor
+        fetch('{% url "receive_task" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Verificar si la respuesta indica éxito
+            if (data.success) {
+                alert('Tarea enviada exitosamente');
+            } else {
+                alert('Error al enviar la tarea: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error al enviar la tarea:', error);
+            alert('Error al enviar la tarea');
+        });
+    });
+
+    // Obtener referencia a los elementos del formulario
+    const taskSelect = document.getElementById('taskSelect');
+    const taskDescription = document.getElementById('taskDescription');
+
+    // Escuchar el evento change en el select de tareas
+    taskSelect.addEventListener('change', function () {
+        // Verificar si se ha seleccionado una tarea
+        if (taskSelect.value === '') {
+            taskDescription.textContent = ''; // Limpiar la descripción si no hay tarea seleccionada
+        } else {
+            // Obtener la descripción de la tarea seleccionada
+            const selectedTask = taskSelect.options[taskSelect.selectedIndex];
+            const description = selectedTask.getAttribute('data-description');
+
+            // Actualizar el contenido de la descripción de la tarea
+            taskDescription.textContent = description;
+        }
+    });
+</script>
+{% endblock %}

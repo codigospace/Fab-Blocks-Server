@@ -1,0 +1,227 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Fab Blocks</title>
+    {% load static %}
+    <link rel="icon" type="image/x-icon" href="{% static 'media/final.ico' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'main.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/header-user.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/footer-user.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'javascript/highlight/styles/default.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    {% include 'header_user.html' %}
+    <xml id="startBlocks" style="display: none">
+        <block type="controls_setupLoop" deletable="false"></block>
+    </xml>
+    <div id="wrap">
+        <div id="buttons" style="display: flex; align-items: center;">
+            <button class="btn btn-info m-1" id="compileFileButton" onclick="compileFile()">Verificar</button>
+            <button class="btn btn-info m-1" id="uploadButton" onclick="compileFile()">Subir</button>
+            <button class="btn btn-info m-1" id="newFileButton" onclick="newFile()">Nuevo</button>
+            <button class="btn btn-info m-1" id="openFileButton" onclick="openFile()">Abrir</button>
+            <button class="btn btn-info m-1" id="saveFileButton" onclick="saveData()">Guardar</button>
+            <button hidden id="toggleButton" onclick="toggleCode()">Mostrar Codigo</button>
+            <div class="input-group">
+                <span class="input-group-text" id="inputGroup-sizing-sm">Placas</span>
+                <select class="form-select" id="placas" aria-label="Placas">
+                    <option value="uno">Arduino Uno</option>
+                    <option value="nano">Arduino Nano</option>
+                    <option value="mega">Arduino Mega</option>
+                    <option value="modular">Modular</option>
+                </select>
+            </div>
+            <div class="input-group m-1">
+                <span class="input-group-text" id="inputGroup-sizing-default">Codigo</span>
+                <input type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default">
+            </div>
+            <div class="container m-1">
+                <div class="progress">
+                    <div class="progress-bar" role="progressbar" aria-label="Example with label" style="width: 0%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">Compilando</div>
+                  </div>
+            </div>
+        </div>
+        
+        <div id="blockly" style="float: left; width: 100%;"></div>
+        <div id="code" style="float: right; width: 34%; display: none;"></div>
+    </div>
+    <script src="{% static 'javascript/jquery/dist/jquery.min.js' %}"></script>
+    <script src="{% static 'javascript/underscore/underscore.js' %}"></script>
+    <script src="{% static 'javascript/highlight/highlight.pack.js' %}"></script>
+    <script src="{% static 'javascript/blockly-bq/blockly_compressed.js' %}"></script>
+    <script src="{% static 'javascript/blockly-bq/blocks_compressed.js' %}"></script>
+    <script src="{% static 'javascript/blockly-bq/arduino_compressed.js' %}"></script>
+    <script src="{% static 'accounts/header-user.js' %}"></script>
+    <script src="{% static 'roboblocks.js' %}"></script>
+    <script>
+        if (window.roboblocksLanguage === undefined || window.roboblocksLanguage == null) {
+            var roboblocksLanguage = 'es-ES';
+        }
+
+        RoboBlocks.load({
+            zoom: 0.5
+        });
+
+        // New workspace for each test case
+        var el = document.getElementById('blockly');
+        Blockly.inject(el, {
+            toolbox: Blockly.createToolbox()
+        });
+        // Create a default setup/loop block
+        Blockly.Xml.domToWorkspace(Blockly.getMainWorkspace(),
+            document.getElementById('startBlocks'));
+
+        $('.blocklySvg, #blockly').height('100%');
+        $('.blocklySvg').width('100%');
+
+        var colors = [
+            "",
+            RoboBlocks.LANG_COLOUR_PROCEDURES,
+            RoboBlocks.LANG_COLOUR_CONTROL,
+            RoboBlocks.LANG_COLOUR_LOGIC,
+            RoboBlocks.LANG_COLOUR_MATH,
+            RoboBlocks.LANG_COLOUR_VARIABLES,
+            RoboBlocks.LANG_COLOUR_TEXT,
+            RoboBlocks.LANG_COLOUR_COMMUNICATION,
+            RoboBlocks.LANG_COLOUR_MODULAR,
+            RoboBlocks.LANG_COLOUR_ZUM,
+            RoboBlocks.LANG_COLOUR_BQ,
+            RoboBlocks.LANG_COLOUR_ADVANCED,
+            RoboBlocks.LANG_COLOUR_LCD,
+            RoboBlocks.LANG_COLOUR_SERVO,
+        ];
+
+        $('.blocklyTreeRow').each(function (i, e) {
+            $(e).prepend('<span class="treeLabelBlock" style="background-color:' + colors[i] + '"></span>');
+        });
+
+        // Update code
+        Blockly.addChangeListener(function () {
+            $('#code').html('<code class="c++"><pre>'
+                + escapeCode(Blockly.Arduino.workspaceToCode())
+                + '</pre></code>');
+            // Highlight
+            $("pre").each(function (i, e) {
+                hljs.highlightBlock(e);
+            });
+        });
+
+        // Función para guardar datos
+        function saveData() {
+            console.log("boton presionado de guardar en el servidor");
+            
+            // var code = Blockly.Arduino.workspaceToCode();
+            
+            var elements = document.getElementsByClassName('hljs cpp'); // Clase para el código C++
+            var info = [];
+            for (var i = 0; i < elements.length; i++) {
+                info.push(elements[i].innerText);
+            }
+            info;
+
+            var formData = new FormData();
+            formData.append('codigo', info);
+
+            fetch('api/compile/', { // Cambiar la URL al endpoint de la API de Django
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error al guardar los datos: ' + response.statusText);
+                }
+                return response.json(); // Leer el JSON de la respuesta
+            })
+            .then(data => {
+                console.log('Respuesta del servidor:', data);
+                // Aquí puedes manejar la respuesta del servidor si es necesario
+            })
+            .catch(error => {
+                console.error('Error al guardar los datos:', error);
+            });
+        }
+
+        // Función para compilar
+        function compileFile() {
+            var elements = document.getElementsByClassName('hljs cpp'); // Clase para el código C++
+            var info = [];
+            for (var i = 0; i < elements.length; i++) {
+                info.push(elements[i].innerText);
+            }
+            info;
+
+            var formData = new FormData();
+            formData.append('codigo', info);
+            
+            console.log("Botón compilar presionado");
+            fetch('api/compile/', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(data => {
+                console.log('Respuesta del servidor:', data);
+            })
+            .catch(error => {
+                console.error('Error al compilar el archivo:', error);
+            });
+        }
+
+        function escapeCode(code) {
+            var str = code;
+            str = str.replace(/</g, "&lt;");
+            str = str.replace(/>/g, "&gt;");
+            return str;
+        }
+
+        function openFile() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.fab';
+            input.style.display = 'none';
+
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (!file) {
+                    console.error('No se ha seleccionado ningún archivo.');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const fileContent = event.target.result.replace(/\n/g, '');
+                    // Open a new window
+                    const newWindow = window.open(window.location.href, '_blank');
+
+                    // Log file content to the console of the new window
+                    newWindow.onload = function() {
+                        newWindow.eval(`
+                            var xml = '${fileContent}';
+                            console.log('File content:', xml);
+                            Blockly.mainWorkspace.clear();
+                            console.log('Blockly main workspace cleared');
+                            Blockly.Xml.domToWorkspace(Blockly.getMainWorkspace(), Blockly.Xml.textToDom(xml));
+                            console.log('XML inserted into workspace');
+                        `);
+                    };
+                };
+                reader.readAsText(file);
+            };
+
+            document.body.appendChild(input);
+            input.click();
+        }
+
+        function newFile() {
+            const newWindow = window.open(window.location.origin + '/fabblocks', '_blank');
+            newWindow.focus();
+        }
+    </script>
+    {% include 'footer_user.html' %}
+</body>
+</html>

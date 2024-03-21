@@ -1,0 +1,17 @@
+[
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "D:\\Proyectos\\modulinoDev\\arduinoDev\\hardware\\arduino\\avr\\cores\\arduino"
+  },
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "D:\\Proyectos\\modulinoDev\\arduinoDev\\hardware\\arduino\\avr\\variants\\standard"
+  },
+  {
+    "Sourcefile": "D:\\Proyectos\\fabwebdjango\\inohub\\ino\\build\\sketch\\extracted_code.ino.cpp",
+    "Include": "",
+    "Includepath": null
+  }
+]

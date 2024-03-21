@@ -1,0 +1,91 @@
+{% extends 'header_account.html' %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">Registro</div>
+            <div class="card-body">
+                <form method="POST" action="{% url 'register' %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="first_name">Nombre</label>
+                        <input type="text" name="first_name" id="first_name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="last_name">Apellido</label>
+                        <input type="text" name="last_name" id="last_name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="username">Nombre de usuario</label>
+                        <input type="text" name="username" id="username" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password1">Contraseña</label>
+                        <input type="password" name="password1" id="password1" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password2">Confirmar contraseña</label>
+                        <input type="password" name="password2" id="password2" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Correo electrónico</label>
+                        <input type="email" name="email" id="email" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="birth_date">Fecha de nacimiento</label>
+                        <input type="date" name="birth_date" id="birth_date" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="image">Imagen de perfil</label>
+                        <input type="file" name="image" id="image" class="form-control-file" onchange="previewFile()" accept="image/png, image/jpeg, image/gif">
+                        <img id="preview" src="" alt="Previsualización de imagen" style="max-width: 100%; height: auto; display: none;">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Registrarse</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function previewFile() {
+        var preview = document.getElementById('preview'); // Selecciona el elemento donde se mostrará la previsualización
+        var file    = document.getElementById('image').files[0]; // Toma el archivo seleccionado
+        var reader  = new FileReader();
+    
+        reader.onloadend = function () {
+            preview.src = reader.result;
+            preview.style.display = 'block'; // Muestra la imagen si estaba oculta
+        }
+    
+        if (file) {
+            reader.readAsDataURL(file); // Lee el archivo y usa el URL de datos como el src de la imagen
+        } else {
+            preview.src = "";
+            preview.style.display = 'none'; // Oculta la imagen si no hay archivo seleccionado
+        }
+    }
+    </script>
+
+<div class="row justify-content-center mt-3">
+    <div class="col-md-6">
+        <div class="text-center">
+            <p>¿Ya tienes una cuenta? <a href="{% url 'login' %}">Iniciar sesión</a></p>
+        </div>
+    </div>
+</div>
+{% if errors %}
+    <div class="alert alert-danger">
+        <strong>Por favor, corrige los siguientes errores:</strong>
+        <ul>
+            {% for field, error_list in errors.items %}
+                {% for error in error_list %}
+                    <li>{{ field|title }}: {{ error }}</li>
+                {% endfor %}
+            {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+
+{% endblock %}
+    

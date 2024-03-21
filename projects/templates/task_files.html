@@ -1,0 +1,33 @@
+{% extends 'base_tasks.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Archivos de la tarea "{{ task.title }}"</h1>
+    <div class="row">
+        <div class="col-md-12">
+            {% if files %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Usuario</th>
+                            <th scope="col">Tarea</th>
+                            <th scope="col">Subido</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for file in files %}
+                            <tr>
+                                <td><a href="{% url 'task_project_content' task_id=file.task.id %}">{{ file.user }}</a></td>  <!-- Usar el campo user en lugar de creator -->
+                                <td>{{ file.task }}</td>
+                                <td>{{ file.uploaded_at }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="alert alert-info">No se encontraron archivos asociados a esta tarea.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

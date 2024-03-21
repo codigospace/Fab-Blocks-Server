@@ -1,0 +1,6 @@
+/* Alinear el menú de placas a la derecha */
+.dropdown-menu-right {
+    left: auto;
+    right: 0;
+  }
+  

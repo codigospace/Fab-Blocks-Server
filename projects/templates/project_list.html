@@ -1,0 +1,162 @@
+{% extends 'base_projects.html' %}
+{% block content %}
+<h2>Mis Proyectos</h2>
+{% if error_message %}
+<div class="alert alert-danger" role="alert">
+    {{ error_message }}
+</div>
+{% endif %}
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Nombre</th>
+                <th scope="col">Placa</th>
+                <th scope="col">Codigo</th>
+                <th scope="col">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for project in projects %}
+            <tr>
+                <td>
+                    <a href="{% url 'project_content' project.id %}">{{ project.name }}</a>
+                </td>
+                <td>{{ project.placa }}</td>
+                <td>{{ project.codemac }}</td>
+                <td>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="openEditModal({{ project.id }}, '{{ project.name }}')">Cambiar nombre</button>
+                    <button type="button" class="btn btn-success btn-sm" onclick="confirmExecuteProject({{ project.id }})">Ejecutar</button>
+                    <button type="button" class="btn btn-info btn-sm" onclick="confirmDeleteProject({{ project.id }})">Eliminar</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal de edición de nombre de proyecto -->
+<div class="modal fade" id="editProjectModal" tabindex="-1" aria-labelledby="editProjectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editProjectModalLabel">Editar Nombre de Proyecto</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="newProjectName">Nuevo Nombre:</label>
+                    <input type="text" class="form-control" id="newProjectName">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="saveProjectNameButton">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal de confirmación para eliminar proyecto -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmar Eliminación</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                ¿Estás seguro de que deseas eliminar este proyecto?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteButton">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    var projectIdToEdit = null;
+
+    // Función para abrir el modal de edición de nombre de proyecto
+    function openEditModal(projectId, projectName) {
+        projectIdToEdit = projectId;
+        $('#newProjectName').val(projectName);
+        $('#editProjectModal').modal('show');
+    }
+
+    // Función para enviar la solicitud de cambio de nombre de proyecto al servidor
+    function saveProjectName() {
+        var newName = $('#newProjectName').val();
+
+        // Realizar una solicitud POST al servidor para cambiar el nombre del proyecto
+        fetch(`/projects/update/${projectIdToEdit}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ newName: newName })
+        })
+        .then(response => {
+            // Verificar si la respuesta fue exitosa
+            if (response.ok) {
+                // Si la respuesta fue exitosa, cerrar el modal y recargar la página para actualizar la lista de proyectos
+                $('#editProjectModal').modal('hide');
+                location.reload();
+            } else {
+                // Si la respuesta fue un error, mostrar un mensaje de error
+                console.error('Error al cambiar el nombre del proyecto:', response.statusText);
+            }
+        })
+        .catch(error => {
+            // Manejar errores de red u otros errores
+            console.error('Error:', error);
+        });
+    }
+
+    // Función para mostrar el modal de confirmación antes de eliminar un proyecto
+    function confirmDeleteProject(projectId) {
+        $('#confirmDeleteModal').modal('show');
+        $('#confirmDeleteButton').click(function() {
+            deleteProject(projectId);
+            $('#confirmDeleteModal').modal('hide');
+        });
+    }
+
+    // Función para enviar la solicitud de eliminación de proyecto al servidor
+    function deleteProject(projectId) {
+        // Realizar una solicitud POST al servidor para eliminar el proyecto
+        fetch(`/projects/delete/${projectId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => {
+            // Verificar si la respuesta fue exitosa
+            if (response.ok) {
+                // Si la respuesta fue exitosa, recargar la página para actualizar la lista de proyectos
+                location.reload();
+            } else {
+                // Si la respuesta fue un error, mostrar un mensaje de error
+                console.error('Error al eliminar el proyecto:', response.statusText);
+            }
+        })
+        .catch(error => {
+            // Manejar errores de red u otros errores
+            console.error('Error:', error);
+        });
+    }
+
+    // Asignar el evento click al botón de guardar cambios en el modal
+    $('#saveProjectNameButton').click(function() {
+        saveProjectName();
+    });
+</script>
+{% endblock %}

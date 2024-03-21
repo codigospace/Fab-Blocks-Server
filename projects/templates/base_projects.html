@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proyectos</title>
+    <!-- Enlace a CSS Bootstrap para facilitar el diseño -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <!-- Otros enlaces a CSS o JS según sea necesario -->
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">Gestión de Proyectos</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item active">
+                    <button id="goBack" class="btn btn-outline-primary mr-2">Regresar a FabBlocks</button>
+                </li>
+                <li class="nav-item">
+                    <button type="button" class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#crearProyectoModal">
+                        Crear Proyecto
+                    </button>
+                </li>
+                {% if user.is_authenticated and user.user_type == 'profesor' %}
+                <li>
+                    <a class="btn btn-outline-primary mr-2" href="{% url 'task_list_user' %}">Ver Tareas</a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <div class="modal fade" id="crearProyectoModal" tabindex="-1" aria-labelledby="crearProyectoModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="crearProyectoModalLabel">Nuevo Proyecto</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="createProjectForm">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="nombreProyecto">Nombre del proyecto:</label>
+                            <input type="text" class="form-control" id="nombreProyecto" name="nombreProyecto" placeholder="Nombre del proyecto">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Crear Proyecto</button>
+                    </form>
+                </div>
+                {% if user.is_authenticated and user.user_type == 'profesor' %}
+                    <div class="modal fade" id="crearProyectoModal" tabindex="-1" aria-labelledby="crearProyectoModalLabel" aria-hidden="true">
+                    </div>
+
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="crearTareaModal" tabindex="-1" aria-labelledby="crearTareaModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="crearTareaModalLabel">Nueva Tarea</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="createTaskForm">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="nombreTarea">Nombre de la tarea:</label>
+                            <input type="text" class="form-control" id="nombreTarea" name="nombreTarea" placeholder="Nombre de la tarea" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="descripcionTarea">Descripción de la tarea:</label>
+                            <textarea class="form-control" id="descripcionTarea" name="descripcionTarea" rows="3" placeholder="Descripción de la tarea" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Crear Tarea</button>
+                    </form>
+                </div>                
+            </div>
+        </div>
+    </div>
+
+    {% if error %}
+    <div id="error-message" class="alert alert-danger" role="alert">
+        {{ error }}
+    </div>
+    <script>
+        // Eliminar el mensaje de error después de 8 segundos
+        setTimeout(function() {
+            var errorMessage = document.getElementById('error-message');
+            if (errorMessage) {
+                errorMessage.parentNode.removeChild(errorMessage);
+            }
+        }, 8000);
+    </script>
+    {% endif %}
+    
+    <!-- Otros elementos HTML y scripts según sea necesario -->
+    
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script>
+        document.getElementById("createProjectForm").addEventListener("submit", function(event) {
+            event.preventDefault(); // Evitar que el formulario se envíe normalmente
+
+            var projectName = document.getElementById("nombreProyecto").value;
+
+            if (!projectName) {
+                alert("Por favor, ingresa un nombre para el proyecto.");
+                return;
+            }
+
+            // Crear un objeto FormData para enviar los datos del formulario
+            var formData = new FormData();
+            formData.append("nombreProyecto", projectName);
+
+            // Enviar una solicitud POST al servidor para crear un nuevo proyecto
+            fetch("{% url 'create_project' %}", {
+                method: "POST",
+                body: formData,
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}"
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Si la respuesta es exitosa, ocultar el modal y recargar la página para actualizar la lista de proyectos
+                    $("#crearProyectoModal").modal("hide");
+                    location.reload();
+                } else {
+                    // Si hay un error en la respuesta, mostrar un mensaje de error
+                    alert("Error al crear el proyecto. Por favor, inténtalo de nuevo.");
+                }
+            })
+            .catch(error => {
+                // Manejar errores de red u otros errores
+                console.error("Error:", error);
+                alert("Se produjo un error al comunicarse con el servidor. Por favor, inténtalo de nuevo.");
+            });
+        });
+
+        document.getElementById('goBack').addEventListener('click', function() {
+            window.history.back();
+        });
+
+        document.getElementById("createTaskForm").addEventListener("submit", function(event) {
+            event.preventDefault(); // Evitar que el formulario se envíe normalmente
+
+            var taskName = document.getElementById("nombreTarea").value;
+            var taskDescription = document.getElementById("descripcionTarea").value;
+
+            if (!taskName) {
+                alert("Por favor, ingresa un nombre para la tarea.");
+                return;
+            }
+
+            // Crear un objeto FormData para enviar los datos del formulario
+            var formData = new FormData();
+            formData.append("task_name", taskName);
+            formData.append("task_description", taskDescription);
+
+            // Enviar una solicitud POST al servidor para crear una nueva tarea
+            fetch("{% url 'create_task' %}", {
+                method: "POST",
+                body: formData,
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}"
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Si la respuesta es exitosa, redirigir al usuario a la vista de la lista de tareas
+                    window.location.href = "{% url 'task_list_user' %}";
+                } else {
+                    // Si hay un error en la respuesta, mostrar un mensaje de error
+                    alert("Error al crear la tarea. Por favor, inténtalo de nuevo.");
+                }
+            })
+            .catch(error => {
+                // Manejar errores de red u otros errores
+                console.error("Error:", error);
+                alert("Se produjo un error al comunicarse con el servidor. Por favor, inténtalo de nuevo.");
+            });
+        });
+    </script>
+</body>
+</html>

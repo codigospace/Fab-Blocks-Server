@@ -1,0 +1,30 @@
+{% include 'header_account.html' %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-6 mx-auto">
+            <div class="card">
+                <div class="card-header text-center">
+                    Perfil de Usuario
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <img src="{{ user.image.url }}" class="img-fluid" alt="Foto de perfil">
+                        </div>
+                        <div class="col-md-8">
+                            <p><strong>Nombre:</strong> {{ user.first_name }} {{ user.last_name }}</p>
+                            <p><strong>Usuario:</strong> {{ user.username }}</p>
+                            <p><strong>Email:</strong> {{ user.email }}</p>
+                            <p><strong>Cumpleaños:</strong> {{ user.birth_date }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-body-secondary text-center">
+                  <a href="{% url 'fabblocks' %}">Fab Blocks</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

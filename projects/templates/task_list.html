@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Tareas</title>
+    <!-- Enlace a CSS Bootstrap para facilitar el diseño -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <!-- Otros enlaces a CSS o JS según sea necesario -->
+    <style>
+        .badge {
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    {% include 'base_tasks.html' %}
+    <div class="container mt-5">
+        <h1>Lista de Tareas</h1>
+        <hr>
+        <div id="task-list">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">Título</th>
+                        <th scope="col">Descripcion</th>
+                        <th scope="col">Visibilidad</th>
+                        <th scope="col">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in tasks %}
+                    <tr data-task-id="{{ task.id }}" data-visible="{{ task.visible }}">
+                        <td><a href="{% url 'task_files' task_id=task.id %}">{{ task.title }}</a></td>
+                        <td>{{ task.description }}</td>
+                        <td>
+                            {% if task.visible %}
+                            <span class="badge badge-success">Visible</span>
+                            {% else %}
+                            <span class="badge badge-danger">Invisible</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-secondary toggle-visibility">Cambiar Visibilidad</button>
+                            <button class="btn btn-sm btn-primary update-task" data-toggle="modal"
+                                data-target="#updateTaskModal">Actualizar</button>
+                            <button class="btn btn-sm btn-danger delete-task" data-task-id="{{ task.id }}" data-toggle="modal"
+                                data-target="#confirmDeleteModal">Eliminar</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% if not tasks %}
+            <p>No hay tareas disponibles.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmar Eliminación</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Estás seguro de que deseas eliminar esta tarea?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteButton">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="updateTaskModal" tabindex="-1" aria-labelledby="updateTaskModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="updateTaskModalLabel">Actualizar Tarea</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="updateTaskForm">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="newTitle">Nuevo Título:</label>
+                        <input type="text" class="form-control" id="newTitle" name="newTitle"
+                            placeholder="Nuevo título">
+                    </div>
+                    <div class="form-group">
+                        <label for="newDescription">Nueva Descripción:</label>
+                        <textarea class="form-control" id="newDescription" name="newDescription" rows="3"
+                            placeholder="Nueva descripción"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Actualizar Tarea</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <!-- Otros elementos HTML y scripts según sea necesario -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.toggle-visibility').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var row = this.closest('tr');
+                    var taskId = row.dataset.taskId;
+                    var isVisible = row.dataset.visible === 'true';
+
+                    fetch(`/projects/toggle-visibility/${taskId}/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({ visible: !isVisible })
+                    })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                row.dataset.visible = data.visible;
+                                var badge = row.querySelector('.badge');
+                                badge.textContent = data.visible ? 'Visible' : 'Invisible';
+                                badge.classList.remove(data.visible ? 'badge-danger' : 'badge-success');
+                                badge.classList.add(data.visible ? 'badge-success' : 'badge-danger');
+                            } else {
+                                alert('No tienes permiso para cambiar la visibilidad de esta tarea.');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('There has been a problem with your fetch operation:', error);
+                        });
+                });
+            });
+
+            document.querySelectorAll('.delete-task').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var taskId = this.dataset.taskId;
+                    $('#confirmDeleteModal').modal('show');
+
+                    document.getElementById('confirmDeleteButton').addEventListener('click', function () {
+                        fetch(`/projects/delete-task/${taskId}/`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            }
+                        })
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error('Network response was not ok');
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                if (data.success) {
+                                    $('#confirmDeleteModal').modal('hide');
+                                    document.querySelector(`tr[data-task-id="${taskId}"]`).remove();
+                                    alert('Tarea eliminada exitosamente');
+                                } else {
+                                    alert(data.error);
+                                }
+                            })
+                            .catch(error => {
+                                console.error('There has been a problem with your fetch operation:', error);
+                            });
+                    });
+                });
+            });
+
+            document.querySelectorAll('.update-task').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var row = this.closest('tr');
+                    var taskId = row.dataset.taskId;
+
+                    // Obtener el título y la descripción actuales de la tarea
+                    var currentTitle = row.querySelector('td:first-child').textContent;
+                    var currentDescription = row.querySelector('td:nth-child(2)').textContent;
+
+                    // Preparar el formulario de actualización de tarea con los valores actuales
+                    var form = document.getElementById('updateTaskForm');
+                    form.elements.newTitle.value = currentTitle.trim();
+                    form.elements.newDescription.value = currentDescription.trim();
+
+                    // Abrir el modal de actualización de tarea
+                    $('#updateTaskModal').modal('show');
+
+                    // Manejar el evento de envío del formulario de actualización de tarea
+                    form.addEventListener('submit', function (event) {
+                        event.preventDefault(); // Evitar que el formulario se envíe por defecto
+
+                        // Obtener los nuevos valores del formulario
+                        var newTitle = form.elements.newTitle.value.trim();
+                        var newDescription = form.elements.newDescription.value.trim();
+
+                        // Enviar la solicitud de actualización de la tarea
+                        fetch(`/projects/update-task/${taskId}/`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            body: JSON.stringify({
+                                newTitle: newTitle,
+                                newDescription: newDescription
+                            })
+                        })
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error('Network response was not ok');
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                if (data.success) {
+                                    // Actualizar los valores en la tabla de tareas
+                                    row.querySelector('td:first-child').textContent = newTitle;
+                                    row.querySelector('td:nth-child(2)').textContent = newDescription;
+                                    $('#updateTaskModal').modal('hide'); // Ocultar el modal de actualización
+                                    alert('Tarea actualizada exitosamente');
+                                } else {
+                                    alert(data.error);
+                                }
+                            })
+                            .catch(error => {
+                                console.error('There has been a problem with your fetch operation:', error);
+                            });
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
+
